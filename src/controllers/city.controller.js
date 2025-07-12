@@ -1,21 +1,14 @@
-import Country from '../models/country.model.js';
 import { isValidObjectId } from 'mongoose';
+import City from '../models/city.model.js';
 
-export class CountryController {
-    async createCountry(req, res) {
+export class CityController {
+    async createCity(req, res) {
         try {
-            const existsCountry = await Country.findOne({ name: req.body?.name });
-            if (existsCountry) {
-                return res.status(409).json({
-                    statusCode: 409,
-                    message: 'Country already added'
-                });
-            }
-            const newCountry = await Country.create(req.body);
+            const newCity = await City.create(req.body);
             return res.status(201).json({
                 statusCode: 201,
                 message: 'success',
-                data: newCountry
+                data: newCity
             });
         } catch (error) {
             return res.status(500).json({
@@ -25,13 +18,13 @@ export class CountryController {
         }
     }
 
-    async getAllCountries(_, res) {
+    async getAllCities(_, res) {
         try {
-            const countries = await Country.find().populate('cities');
+            const cities = await City.find().populate('country');
             return res.status(200).json({
                 statusCode: 200,
                 message: 'success',
-                data: countries
+                data: cities
             });
         } catch (error) {
             return res.status(500).json({
@@ -41,7 +34,7 @@ export class CountryController {
         }
     }
 
-    async getCountryById(req, res) {
+    async getCityById(req, res) {
         try {
             const id = req.params?.id;
             if (!isValidObjectId(id)) {
@@ -50,17 +43,17 @@ export class CountryController {
                     message: 'Invalid ObjectId'
                 });
             }
-            const country = await Country.findById(id).populate('cities');
-            if (!country) {
+            const city = await City.findById(id).populate('country');
+            if (!city) {
                 return res.status(404).json({
                     statusCode: 404,
-                    message: 'Country not found'
+                    message: 'City not found'
                 });
             }
             return res.status(200).json({
                 statusCode: 200,
                 message: 'success',
-                data: country
+                data: city
             });
         } catch (error) {
             return res.status(500).json({
@@ -70,7 +63,7 @@ export class CountryController {
         }
     }
 
-    async updateCountry(req, res) {
+    async updateCity(req, res) {
         try {
             const id = req.params?.id;
             if (!isValidObjectId(id)) {
@@ -79,18 +72,18 @@ export class CountryController {
                     message: 'Invalid ObjectId'
                 });
             }
-            const country = await Country.findById(id);
-            if (!country) {
+            const updatedCity = await City.findByIdAndUpdate(id, req.body, { new: true });
+            if (!updatedCity) {
                 return res.status(404).json({
                     statusCode: 404,
-                    message: 'Country not found'
+                    message: 'City not found'
                 });
             }
-            const updatedCountry = await Country.findByIdAndUpdate(id, req.body, { new: true });
+            const city = await City.findById(id).populate('country');
             return res.status(200).json({
                 statusCode: 200,
                 message: 'success',
-                data: updatedCountry
+                data: city
             });
         } catch (error) {
             return res.status(500).json({
@@ -100,7 +93,7 @@ export class CountryController {
         }
     }
 
-    async deleteCountry(req, res) {
+    async deleteCity(req, res) {
         try {
             const id = req.params?.id;
             if (!isValidObjectId(id)) {
@@ -109,14 +102,13 @@ export class CountryController {
                     message: 'Invalid ObjectId'
                 });
             }
-            const country = await Country.findById(id);
-            if (!country) {
+            const city = await City.findByIdAndDelete(id);
+            if (!city) {
                 return res.status(404).json({
                     statusCode: 404,
-                    message: 'Country not found'
+                    message: 'City not found'
                 });
             }
-            await Country.findByIdAndDelete(id);
             return res.status(200).json({
                 statusCode: 200,
                 message: 'success',

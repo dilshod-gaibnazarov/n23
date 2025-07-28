@@ -32,6 +32,26 @@ class AdminValidator {
             newPassword: Joi.string().pattern(AdminValidator.passwordRegex).required()
         });
     }
+
+    forgetPassword() {
+        return Joi.object({
+            email: Joi.string().email().required()
+        });
+    }
+
+    confirmOTP() {
+        return Joi.object({
+            email: Joi.string().email().required(),
+            otp: Joi.string().length(6).required()
+        });
+    }
+
+    confirmPassword() {
+        return Joi.object({
+            email: Joi.string().email().required(),
+            newPassword: Joi.string().pattern(AdminValidator.passwordRegex).required()
+        });
+    }
 }
 
 export default new AdminValidator();

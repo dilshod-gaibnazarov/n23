@@ -5,18 +5,25 @@ import { RolesGuard } from "../guards/role.guard.js";
 import { validate } from "../middlewares/validate.js";
 import AdminValidation from "../validation/AdminValidation.js";
 import { requestLimiter } from '../utils/request-limit.js';
+import { Roles } from '../const/index.js';
 
 const router = Router();
 
 router
-    .post('/', AuthGuard, RolesGuard('SUPERADMIN'), validate(AdminValidation.create), controller.createAdmin)
+    .post('/', AuthGuard, RolesGuard(Roles.SUPERADMIN), validate(AdminValidation.create), controller.createAdmin)
     .post('/signin', requestLimiter(60, 10), validate(AdminValidation.signin), controller.signIn)
     .post('/token', controller.generateNewToken)
     .post('/signout', AuthGuard, controller.signOut)
-    .get('/', AuthGuard, RolesGuard('SUPERADMIN'), controller.findAll)
-    .get('/:id', AuthGuard, RolesGuard('SUPERADMIN', 'ID'), controller.findById)
-    .patch('/password/:id', AuthGuard, RolesGuard('SUPERADMIN', 'ID'), validate(AdminValidation.password), controller.updatePasswordForAdmin)
-    .patch('/:id', AuthGuard, RolesGuard('SUPERADMIN', 'ID'), validate(AdminValidation.update), controller.updateAdmin)
-    .delete('/:id', AuthGuard, RolesGuard('SUPERADMIN'), controller.delete)
+
+    .get('/', AuthGuard, RolesGuard(Roles.SUPERADMIN), controller.findAll)
+    .get('/:id', AuthGuard, RolesGuard(Roles.SUPERADMIN, 'ID'), controller.findById)
+
+    .patch('/password/:id', AuthGuard, RolesGuard(Roles.SUPERADMIN, 'ID'), validate(AdminValidation.password), controller.updatePasswordForAdmin)
+    .patch('/forget-password', validate(AdminValidation.forgetPassword), controller.forgetPassword)
+    .patch('/confirm-otp', validate(AdminValidation.confirmOTP), controller.confirmOTP)
+    .patch('/confirm-password', validate(AdminValidation.confirmPassword), controller.confirmPassword)
+    .patch('/:id', AuthGuard, RolesGuard(Roles.SUPERADMIN, 'ID'), validate(AdminValidation.update), controller.updateAdmin)
+
+    .delete('/:id', AuthGuard, RolesGuard(Roles.SUPERADMIN), controller.delete)
 
 export default router;

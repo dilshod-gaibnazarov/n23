@@ -5,6 +5,9 @@ import token from '../utils/Token.js';
 import config from '../config/index.js';
 import { AppError } from '../error/AppError.js';
 import { successRes } from '../utils/success-res.js';
+import { generateOTP } from '../utils/generate-otp.js';
+import { sendOTPToMail } from '../utils/send-mail.js';
+import redis from '../utils/Redis.js';
 
 class AdminController extends BaseController {
     constructor() {
@@ -104,7 +107,6 @@ class AdminController extends BaseController {
         }
     }
 
-    // damage 
     async updateAdmin(req, res, next) {
         try {
             const id = req.params?.id;
@@ -156,8 +158,57 @@ class AdminController extends BaseController {
         }
     }
 
-    async forgetPassword(req, res, next){
-        
+    async forgetPassword(req, res, next) {
+        try {
+            const { email } = req.body;
+            const admin = await Admin.findOne({ email });
+            if (!admin) {
+                throw new AppError('Email address is not found', 404);
+            }
+            const otp = generateOTP();
+            sendOTPToMail(email, otp);
+            await redis.setData(email, otp);
+            return successRes(res, {
+                email,
+                otp,
+                expireOTP: '5 minutes',
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async confirmOTP(req, res, next) {
+        try {
+            const { email, otp } = req.body;
+            const checkOTP = await redis.getData(email);
+            if (checkOTP != otp) {
+                throw new AppError('OTP incorrect or expired', 400);
+            }
+            await redis.deleteData(email);
+            return successRes(res, {
+                confirmPasswordURL: config.CONFIRM_PASSWORD_URL,
+                requestMethod: 'PATCH',
+                email
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async confirmPassword(req, res, next) {
+        try {
+            const { email, newPassword } = req.body;
+            const admin = await Admin.findOne({ email });
+            if (!admin) {
+                throw new AppError('Email address is not found', 404);
+            }
+            const hashedPassword = await crypto.encrypt(newPassword);
+            const updatedAdmin = await Admin.findByIdAndUpdate(admin._id, { hashedPassword }, { new: true });
+            return successRes(res, updatedAdmin);
+        } catch (error) {
+            next(error);
+        }
     }
 }
 

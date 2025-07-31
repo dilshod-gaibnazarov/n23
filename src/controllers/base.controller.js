@@ -19,12 +19,12 @@ export class BaseController {
 
     findAll = async (_, res, next) => {
         try {
-            let data = await this.model.find();
-            if (this.populateFields.length) {
-                for (let populateField of this.populateFields) {
-                    data = data.populate(populateField);
-                }
+            const fields = this.populateFields;
+            let query = this.model.find();
+            if (fields?.length) {
+                fields.forEach(field => query.populate(field));
             }
+            const data = await query.exec();
             return successRes(res, data);
         } catch (error) {
             next(error);
@@ -34,12 +34,13 @@ export class BaseController {
     findById = async (req, res, next) => {
         try {
             const id = req.params?.id;
-            const data = await this.checkById(this.model, id);
-            if (this.populateFields.length) {
-                for (let populateField of this.populateFields) {
-                    data = data.populate(populateField);
-                }
+            await BaseController.checkById(this.model, id);
+            let query = this.model.findById(id);
+            const fields = this.populateFields;
+            if (fields?.length) {
+                 fields.forEach(field => query.populate(field));
             }
+            const data = await query.exec();
             return successRes(res, data);
         } catch (error) {
             next(error);
@@ -49,7 +50,7 @@ export class BaseController {
     update = async (req, res, next) => {
         try {
             const id = req.params?.id;
-            await this.checkById(this.model, id);
+            await BaseController.checkById(this.model, id);
             const data = await this.model.findByIdAndUpdate(id, req.body, { new: true });
             if (!data) {
                 throw new AppError('Not found', 404);
@@ -63,7 +64,7 @@ export class BaseController {
     delete = async (req, res, next) => {
         try {
             const id = req.params?.id;
-            await this.checkById(this.model, id);
+            await BaseController.checkById(this.model, id);
             const data = await this.model.findByIdAndDelete(id);
             if (!data) {
                 throw new AppError('Not found', 404);

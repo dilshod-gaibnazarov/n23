@@ -5,8 +5,8 @@ const ProductSchema = new Schema({
     price: { type: Number },
     quantity: { type: Number },
     description: { type: String },
-    saller: { type: Schema.Types.ObjectId, ref: 'Saller' },
-    category: { type: Schema.Types.ObjectId, ref: 'Category' }
+    sallerId: { type: Schema.Types.ObjectId, ref: 'Saller' },
+    categoryId: { type: Schema.Types.ObjectId, ref: 'Category' }
 }, { timestamps: true, versionKey: false });
 
 const Product = model('Product', ProductSchema);

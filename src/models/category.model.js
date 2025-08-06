@@ -1,6 +1,6 @@
 import { Schema, model } from "mongoose";
 
-const CategorySchema = new Schema({
+const categorySchema = new Schema({
     name: { type: String, required: true, unique: true },
     image: { type: String }
 }, {
@@ -15,11 +15,11 @@ const CategorySchema = new Schema({
     }
 });
 
-CategorySchema.virtual('products', {
+categorySchema.virtual('products', {
     ref: 'Product',
     localField: '_id',
     foreignField: 'categoryId'
 });
 
-const Category = model('Category', CategorySchema);
+const Category = model('Category', categorySchema);
 export default Category;

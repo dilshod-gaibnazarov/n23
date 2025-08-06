@@ -17,7 +17,7 @@ export class BaseController {
         }
     }
 
-    findAll = async (_, res, next) => {
+    findAll = async (req, res, next) => {
         try {
             const fields = this.populateFields;
             let query = this.model.find();
@@ -38,7 +38,7 @@ export class BaseController {
             let query = this.model.findById(id);
             const fields = this.populateFields;
             if (fields?.length) {
-                 fields.forEach(field => query.populate(field));
+                fields.forEach(field => query.populate(field));
             }
             const data = await query.exec();
             return successRes(res, data);

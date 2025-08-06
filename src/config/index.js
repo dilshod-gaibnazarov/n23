@@ -26,5 +26,6 @@ export default {
         PORT: Number(process.env.REDIS_PORT),
         PASSWORD: String(process.env.REDIS_PASSWORD)
     },
-    CONFIRM_PASSWORD_URL: String(process.env.CONFIRM_PASSWORD_URL)
+    CONFIRM_PASSWORD_URL: String(process.env.CONFIRM_PASSWORD_URL),
+    CRYPTO_SECRET_KEY: String(process.env.CRYPTO_SECRET_KEY)
 }

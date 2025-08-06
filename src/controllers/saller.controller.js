@@ -5,6 +5,7 @@ import { AppError } from '../error/AppError.js';
 import { successRes } from '../utils/success-res.js';
 import token from '../utils/Token.js';
 import config from '../config/index.js';
+import deviceInfo from '../utils/DeviceInfo.js';
 
 class SallerController extends BaseController {
     constructor() {
@@ -49,6 +50,8 @@ class SallerController extends BaseController {
             const accessToken = token.generateAccessToken(payload);
             const refreshToken = token.generateRefreshToken(payload);
             token.writeToCookie(res, 'refreshTokenSaller', refreshToken, 30);
+            const device = deviceInfo.encrypt(req?.headers['user-agent']);
+            saller.devices.push(device);
             return successRes(res, {
                 token: accessToken,
                 saller

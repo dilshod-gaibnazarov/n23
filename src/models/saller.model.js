@@ -1,7 +1,8 @@
 import { Schema, model } from "mongoose";
 import { Roles } from "../const/index.js";
+import { deviceSchema } from './device.model.js';
 
-const SallerSchema = new Schema({
+const sallerSchema = new Schema({
     phoneNumber: { type: String, unique: true, required: true },
     fullName: { type: String, required: true },
     email: { type: String, unique: true, required: true },
@@ -11,6 +12,7 @@ const SallerSchema = new Schema({
     image: { type: String },
     address: { type: String },
     role: { type: String, default: Roles.SALLER },
+    devices: [deviceSchema]
 }, {
     timestamps: true,
     versionKey: false,
@@ -23,11 +25,11 @@ const SallerSchema = new Schema({
     }
 });
 
-SallerSchema.virtual('products', {
+sallerSchema.virtual('products', {
     ref: 'Product',
     localField: '_id',
     foreignField: 'sallerId'
 });
 
-const Saller = model('Saller', SallerSchema);
+const Saller = model('Saller', sallerSchema);
 export default Saller;

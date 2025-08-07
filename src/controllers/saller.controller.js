@@ -40,6 +40,12 @@ class SallerController extends BaseController {
         try {
             const { phoneNumber, password } = req.body;
             const saller = await Saller.findOne({ phoneNumber });
+            const device = deviceInfo.encrypt(req?.headers['user-agent']);
+            if (saller.devices?.length >= 2) {
+                throw new AppError('No more than 2 devices', 403);
+            }
+            saller.devices.push(device);
+            saller.save();
             const isMatchPassword = await crypto.decrypt(password, saller?.hashedPassword ?? '');
             if (!isMatchPassword) {
                 throw new AppError('Phone number or password incorrect', 400);
@@ -50,11 +56,10 @@ class SallerController extends BaseController {
             const accessToken = token.generateAccessToken(payload);
             const refreshToken = token.generateRefreshToken(payload);
             token.writeToCookie(res, 'refreshTokenSaller', refreshToken, 30);
-            const device = deviceInfo.encrypt(req?.headers['user-agent']);
-            saller.devices.push(device);
             return successRes(res, {
                 token: accessToken,
-                saller
+                saller,
+                deviceId: device.deviceId
             });
         } catch (error) {
             next(error);
@@ -102,6 +107,10 @@ class SallerController extends BaseController {
                 throw new AppError('Forbidden user', 403);
             }
             res.clearCookie('refreshTokenSaller');
+            const { deviceId } = req.body;
+            const index = saller.devices.findIndex(device => device.deviceId === deviceId);
+            saller.devices.splice(index, 1);
+            saller.save();
             return successRes(res, {});
         } catch (error) {
             next(error);

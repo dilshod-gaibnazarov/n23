@@ -1,5 +1,5 @@
 import { BaseEntity } from 'src/common/database/base.entity';
-import { AdminRoles } from 'src/common/enum';
+import { Roles } from 'src/common/enum';
 import { Column, Entity } from 'typeorm';
 
 @Entity('admin')
@@ -13,6 +13,6 @@ export class AdminEntity extends BaseEntity {
   @Column({ type: 'boolean', default: false })
   is_active: boolean;
 
-  @Column({ type: 'enum', enum: AdminRoles, default: AdminRoles.ADMIN })
-  role: AdminRoles;
+  @Column({ type: 'enum', enum: Roles, default: Roles.ADMIN })
+  role: Roles;
 }

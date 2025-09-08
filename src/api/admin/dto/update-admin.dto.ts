@@ -4,12 +4,12 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsBoolean, IsOptional } from 'class-validator';
 
 export class UpdateAdminDto extends PartialType(CreateAdminDto) {
-    @ApiPropertyOptional({
-        type: 'boolean',
-        description: 'Status of admin',
-        example: false
-    })
-    @IsBoolean()
-    @IsOptional()
-    is_active: boolean;
+  @ApiPropertyOptional({
+    type: 'boolean',
+    description: 'Status of admin',
+    example: false,
+  })
+  @IsBoolean()
+  @IsOptional()
+  is_active: boolean;
 }

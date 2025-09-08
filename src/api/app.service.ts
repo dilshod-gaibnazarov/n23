@@ -1,13 +1,17 @@
 import { NestFactory } from '@nestjs/core';
+import cookieParser from 'cookie-parser';
+import { HttpStatus, ValidationPipe } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+
 import { AppModule } from './app.module';
 import { config } from 'src/config';
-import { HttpStatus, ValidationPipe } from '@nestjs/common';
-import { AllExceptionFilter } from 'src/infrastructure/exception/all-exception.filter';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { AllExceptionFilter } from 'src/infrastructure/exception/AllException';
 
 export class Application {
   static async main(): Promise<void> {
     const app = await NestFactory.create(AppModule);
+
+    app.useGlobalFilters(new AllExceptionFilter());
 
     app.useGlobalPipes(
       new ValidationPipe({
@@ -17,7 +21,8 @@ export class Application {
         errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
       }),
     );
-    app.useGlobalFilters(new AllExceptionFilter());
+
+    app.use(cookieParser());
 
     const api = 'api/v1';
     app.setGlobalPrefix(api);
@@ -36,5 +41,13 @@ export class Application {
     app.listen(config.API_PORT, () =>
       console.log('Server running on port', config.API_PORT),
     );
+
+    process.on('uncaughtException', (err) => {
+      console.error('Uncaught Exception:', err);
+    });
+
+    process.on('unhandledRejection', (reason, promise) => {
+      console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    });
   }
 }

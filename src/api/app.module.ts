@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { config } from 'src/config';
 import { AdminModule } from './admin/admin.module';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -11,6 +12,9 @@ import { AdminModule } from './admin/admin.module';
       synchronize: config.DB_SYNC,
       entities: ['dist/core/entity/*.entity{.ts,.js}'],
       autoLoadEntities: true,
+    }),
+    JwtModule.register({
+      global: true,
     }),
     AdminModule,
   ],

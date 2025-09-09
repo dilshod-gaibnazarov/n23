@@ -10,7 +10,6 @@ import { Response } from 'express';
 @Catch()
 export class AllExceptionFilter implements ExceptionFilter {
   catch(exception: any, host: ArgumentsHost) {
-    console.log(300000000);
     const ctx = host.switchToHttp();
     const res = ctx.getResponse<Response>();
     const status =
@@ -19,8 +18,10 @@ export class AllExceptionFilter implements ExceptionFilter {
         : HttpStatus.INTERNAL_SERVER_ERROR;
     let errorMessage = 'Internal server error';
     if (exception instanceof HttpException) {
-      const exceptionResponse = exception.getResponse();
-      console.log('Danggg', exceptionResponse);
+      const exceptionResponse: any = exception.getResponse();
+      if (exceptionResponse?.statusCode === 500) {
+        console.log('Danggg', exceptionResponse);
+      }
       if (typeof exceptionResponse === 'string') {
         errorMessage = exceptionResponse;
       } else if (

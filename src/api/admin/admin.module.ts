@@ -5,9 +5,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AdminEntity } from 'src/core/entity/admin.entity';
 import { CryptoService } from 'src/infrastructure/crypt/Crypto';
 import { TokenService } from 'src/infrastructure/token/Token';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([AdminEntity])],
+  imports: [TypeOrmModule.forFeature([AdminEntity]), AuthModule],
   controllers: [AdminController],
   providers: [AdminService, CryptoService, TokenService],
 })

@@ -17,11 +17,11 @@ export class AllExceptionFilter implements ExceptionFilter {
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
     let errorMessage = 'Internal server error';
+    if (status === 500) {
+      console.log(`Danggg: ${exception}`);
+    }
     if (exception instanceof HttpException) {
       const exceptionResponse: any = exception.getResponse();
-      if (exceptionResponse?.statusCode === 500) {
-        console.log('Danggg', exceptionResponse);
-      }
       if (typeof exceptionResponse === 'string') {
         errorMessage = exceptionResponse;
       } else if (

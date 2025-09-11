@@ -3,6 +3,7 @@ import {
   ConflictException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
   OnModuleInit,
 } from '@nestjs/common';
 import { CreateAdminDto } from './dto/create-admin.dto';
@@ -74,7 +75,7 @@ export class AdminService
     const admin = await this.adminRepo.findOne({ where: { username } });
     const isMatchPassword = await this.crypto.decrypt(
       password,
-      admin?.hashed_password as any,
+      admin?.hashed_password || '',
     );
     if (!admin || !isMatchPassword) {
       throw new BadRequestException('Username or password incorrect');
@@ -88,5 +89,36 @@ export class AdminService
     const refreshToken = await this.tokenService.refreshToken(payload);
     await this.tokenService.writeCookie(res, 'adminToken', refreshToken, 15);
     return successRes({ token: accessToken });
+  }
+
+  async updateAdmin(id: string, updateAdminDto: UpdateAdminDto, user: IToken) {
+    const { username, password, is_active } = updateAdminDto;
+    const admin = await this.adminRepo.findOne({ where: { id } });
+    if (!admin) {
+      throw new NotFoundException('Admin not found');
+    }
+    if (username) {
+      const existsUsername = await this.adminRepo.findOne({
+        where: { username },
+      });
+      if (existsUsername && existsUsername.id !== id) {
+        throw new ConflictException('Username already exists');
+      }
+    }
+    let hashedPassword = admin?.hashed_password;
+    let isActive = admin.is_active;
+    if (user.role === Roles.SUPERADMIN) {
+      if (password) {
+        hashedPassword = await this.crypto.encrypt(password);
+      }
+      if (is_active) {
+        isActive = is_active;
+      }
+    }
+    await this.adminRepo.update(
+      { id },
+      { username, is_active: isActive, hashed_password: hashedPassword },
+    );
+    return this.findOneById(id);
   }
 }

@@ -2,6 +2,7 @@ import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
+  HttpException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -28,13 +29,24 @@ export class AuthGuard implements CanActivate {
     }
     try {
       const data = this.jwt.verify(token, { secret: config.TOKEN.ACCESS_KEY });
-      if (data?.is_active != true) {
+      if (data?.isActive != true) {
         throw new ForbiddenException('User is not active');
       }
       req.user = data;
       return true;
     } catch (error) {
-      throw new UnauthorizedException('Token expired or incorrect');
+      const errorObject = {
+        statusCode: error?.response ? 403 : 401,
+        error: {
+          message: error?.response
+            ? error?.message
+            : 'Token expired or incorrect',
+        },
+      };
+      throw new HttpException(
+        errorObject.error.message,
+        errorObject.statusCode,
+      );
     }
   }
 }

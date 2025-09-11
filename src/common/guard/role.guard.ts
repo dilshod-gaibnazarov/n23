@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from 'src/common/decorator/roles.decorator';
+import { Roles } from '../enum';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -16,10 +17,14 @@ export class RolesGuard implements CanActivate {
       ROLES_KEY,
       [context.getHandler(), context.getClass()],
     );
-    const { user } = context.switchToHttp().getRequest();
-    if (!requiredRoles.includes(user?.role)) {
+    const req = context.switchToHttp().getRequest();
+    if (
+      requiredRoles.includes(req.user.role) ||
+      (requiredRoles.includes('ID') && req.user?.id === req.params.id)
+    ) {
+      return true;
+    } else {
       throw new ForbiddenException('Forbidden user');
     }
-    return true;
   }
 }

@@ -13,6 +13,8 @@ type ConfigType = {
     REFRESH_KEY: string;
     REFRESH_TIME: string;
   };
+  FILE_PATH: string;
+  BASE_URL: string;
 };
 
 export const config: ConfigType = {
@@ -30,4 +32,6 @@ export const config: ConfigType = {
     REFRESH_KEY: String(process.env.REFRESH_TOKEN_KEY),
     REFRESH_TIME: String(process.env.REFRESH_TOKEN_TIME),
   },
+  FILE_PATH: String(process.env.FILE_PATH),
+  BASE_URL: String(process.env.BASE_URL),
 };

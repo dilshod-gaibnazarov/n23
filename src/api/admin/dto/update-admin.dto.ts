@@ -9,7 +9,6 @@ export class UpdateAdminDto extends PartialType(CreateAdminDto) {
     description: 'Status of admin',
     example: false,
   })
-  @IsBoolean()
   @IsOptional()
   is_active: boolean;
 }

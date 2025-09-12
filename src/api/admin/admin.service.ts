@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -19,6 +20,7 @@ import { successRes } from 'src/infrastructure/response/success';
 import { TokenService } from 'src/infrastructure/token/Token';
 import { IToken } from 'src/infrastructure/token/interface';
 import { Response } from 'express';
+import { FileService } from 'src/infrastructure/file/FileService';
 
 @Injectable()
 export class AdminService
@@ -29,6 +31,7 @@ export class AdminService
     @InjectRepository(AdminEntity) private readonly adminRepo: AdminRepository,
     private readonly crypto: CryptoService,
     private readonly tokenService: TokenService,
+    private readonly fileService: FileService,
   ) {
     super(adminRepo);
   }
@@ -53,7 +56,8 @@ export class AdminService
     }
   }
 
-  async createAdmin(creteAdminDto: CreateAdminDto) {
+  async createAdmin(creteAdminDto: CreateAdminDto, file: Express.Multer.File) {
+    const imageUrl = await this.fileService.create(file);
     const { username, password } = creteAdminDto;
     const existsUsername = await this.adminRepo.findOne({
       where: { username },
@@ -65,6 +69,7 @@ export class AdminService
     const newAdmin = this.adminRepo.create({
       username,
       hashed_password: hashedPassword,
+      image_url: imageUrl,
     });
     await this.adminRepo.save(newAdmin);
     return successRes(newAdmin, 201);
@@ -91,11 +96,23 @@ export class AdminService
     return successRes({ token: accessToken });
   }
 
-  async updateAdmin(id: string, updateAdminDto: UpdateAdminDto, user: IToken) {
+  async updateAdmin(
+    id: string,
+    updateAdminDto: UpdateAdminDto,
+    user: IToken,
+    image?: Express.Multer.File,
+  ) {
     const { username, password, is_active } = updateAdminDto;
     const admin = await this.adminRepo.findOne({ where: { id } });
     if (!admin) {
       throw new NotFoundException('Admin not found');
+    }
+    let imageUrl = admin.image_url;
+    if (image) {
+      if (await this.fileService.exist(admin.image_url)) {
+        await this.fileService.delete(admin.image_url);
+      }
+      imageUrl = await this.fileService.create(image);
     }
     if (username) {
       const existsUsername = await this.adminRepo.findOne({
@@ -111,14 +128,35 @@ export class AdminService
       if (password) {
         hashedPassword = await this.crypto.encrypt(password);
       }
-      if (is_active) {
+      if (is_active != null) {
         isActive = is_active;
       }
     }
     await this.adminRepo.update(
       { id },
-      { username, is_active: isActive, hashed_password: hashedPassword },
+      {
+        username,
+        is_active: isActive,
+        hashed_password: hashedPassword,
+        image_url: imageUrl,
+      },
     );
     return this.findOneById(id);
+  }
+
+  async deleteAdmin(id: string) {
+    const admin = await this.adminRepo.findOne({
+      where: { id },
+    });
+    if (!admin) {
+      throw new NotFoundException('Admin not found');
+    }
+    if (admin && admin.role === Roles.SUPERADMIN) {
+      throw new ForbiddenException('Deleting super admin is restricted');
+    }
+    if (await this.fileService.exist(admin?.image_url)) {
+      await this.fileService.delete(admin.image_url);
+    }
+    return this.delete(id);
   }
 }

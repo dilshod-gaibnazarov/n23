@@ -4,6 +4,8 @@ import { config } from 'src/config';
 import { AdminModule } from './admin/admin.module';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthModule } from './auth/auth.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -16,6 +18,10 @@ import { AuthModule } from './auth/auth.module';
     }),
     JwtModule.register({
       global: true,
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), '..', config.FILE_PATH),
+      serveRoot: `/api/v1${config.FILE_PATH}`,
     }),
     AuthModule,
     AdminModule,

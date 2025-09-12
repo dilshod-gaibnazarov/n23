@@ -16,6 +16,9 @@ export class AdminEntity extends BaseEntity {
   @Column({ type: 'boolean', default: false })
   is_deleted: boolean;
 
+  @Column({ type: 'varchar', default: '' })
+  image_url: string;
+
   @Column({ type: 'enum', enum: Roles, default: Roles.ADMIN })
   role: Roles;
 }

@@ -6,10 +6,11 @@ import { AdminEntity } from 'src/core/entity/admin.entity';
 import { CryptoService } from 'src/infrastructure/crypt/Crypto';
 import { TokenService } from 'src/infrastructure/token/Token';
 import { AuthModule } from '../auth/auth.module';
+import { FileService } from 'src/infrastructure/file/FileService';
 
 @Module({
   imports: [TypeOrmModule.forFeature([AdminEntity]), AuthModule],
   controllers: [AdminController],
-  providers: [AdminService, CryptoService, TokenService],
+  providers: [AdminService, CryptoService, TokenService, FileService],
 })
 export class AdminModule {}

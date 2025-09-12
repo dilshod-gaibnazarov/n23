@@ -11,7 +11,8 @@ import {
   UseGuards,
   Query,
   ParseUUIDPipe,
-  ForbiddenException,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { CreateAdminDto } from './dto/create-admin.dto';
@@ -19,6 +20,8 @@ import { UpdateAdminDto } from './dto/update-admin.dto';
 import type { Response } from 'express';
 import {
   ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
   ApiOperation,
   ApiParam,
   ApiResponse,
@@ -35,6 +38,8 @@ import { QueryPaginationDto } from 'src/common/dto/query-pagination.dto';
 import { ILike } from 'typeorm';
 import { GetRequestUser } from 'src/common/decorator/get-request-user.decorator';
 import type { IToken } from 'src/infrastructure/token/interface';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ImageValidationPipe } from 'src/infrastructure/pipe/image-validation.pipe';
 
 @ApiTags('Admin')
 @Controller('admin')
@@ -46,6 +51,26 @@ export class AdminController {
 
   @ApiOperation({
     summary: 'Create admin',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        username: {
+          type: 'string',
+          format: 'string',
+        },
+        password: {
+          type: 'string',
+          format: 'string',
+        },
+        image: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
   })
   @ApiResponse({
     status: HttpStatus.CREATED,
@@ -74,8 +99,12 @@ export class AdminController {
   @AccessRoles(Roles.SUPERADMIN)
   @Post()
   @ApiBearerAuth()
-  create(@Body() createAdminDto: CreateAdminDto) {
-    return this.adminService.createAdmin(createAdminDto);
+  @UseInterceptors(FileInterceptor('image'))
+  create(
+    @Body() createAdminDto: CreateAdminDto,
+    @UploadedFile(new ImageValidationPipe()) image: Express.Multer.File,
+  ) {
+    return this.adminService.createAdmin(createAdminDto, image);
   }
 
   @ApiOperation({
@@ -232,6 +261,7 @@ export class AdminController {
         id: true,
         username: true,
         is_active: true,
+        image_url: true,
       },
       skip: page,
       take: limit,
@@ -337,6 +367,29 @@ export class AdminController {
     example: 'e6b189ff-1d45-44e9-a252-5a0b48f3678f',
     description: 'id of admin',
   })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        username: {
+          type: 'string',
+          format: 'string',
+        },
+        password: {
+          type: 'string',
+          format: 'string',
+        },
+        is_active: {
+          type: 'boolean',
+        },
+        image: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Admin updated by id successfully',
@@ -366,12 +419,14 @@ export class AdminController {
   @AccessRoles(Roles.SUPERADMIN, 'ID')
   @Patch(':id')
   @ApiBearerAuth()
+  @UseInterceptors(FileInterceptor('image'))
   update(
     @GetRequestUser('user') user: IToken,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateAdminDto: UpdateAdminDto,
+    @UploadedFile(new ImageValidationPipe()) image?: Express.Multer.File,
   ) {
-    return this.adminService.updateAdmin(id, updateAdminDto, user);
+    return this.adminService.updateAdmin(id, updateAdminDto, user, image);
   }
 
   @ApiOperation({
@@ -455,12 +510,6 @@ export class AdminController {
   @Delete(':id')
   @ApiBearerAuth()
   async remove(@Param('id', ParseUUIDPipe) id: string) {
-    const admin = await this.adminService.getRepository.findOne({
-      where: { id },
-    });
-    if (admin && admin.role === Roles.SUPERADMIN) {
-      throw new ForbiddenException('Deleting super admin is restricted');
-    }
-    return this.adminService.delete(id);
+    return this.adminService.deleteAdmin(id);
   }
 }

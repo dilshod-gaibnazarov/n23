@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+
+<body>
+    <input type="text" id="message">
+    <button onclick="sendMessage()">Send message</button>
+    <ul id="messages"></ul>
+
+    <script>
+        const socket = io('http://192.168.8.187:3000');
+
+        function sendMessage() {
+            const message = document.getElementById('message').value;
+            socket.emit('chat-message', message);
+        }
+
+        socket.on('chat-message', (message) => {
+            const li = document.createElement('li');
+            li.textContent = message;
+            document.getElementById('messages').appendChild(li);
+        });
+
+        socket.on('user-join', (message) => {
+            const li = document.createElement('li');
+            li.textContent = message;
+            document.getElementById('messages').appendChild(li);
+        });
+
+        socket.on('user-left', (message) => {
+            const li = document.createElement('li');
+            li.textContent = message;
+            document.getElementById('messages').appendChild(li);
+        });
+    </script>
+</body>
+
+</html>
